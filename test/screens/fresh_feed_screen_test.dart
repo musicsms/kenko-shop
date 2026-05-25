@@ -25,24 +25,35 @@ void main() {
     expect(find.text('1'), findsOneWidget);
   });
 
-  testWidgets('opens the feed detail placeholder when tapping product name', (
+  testWidgets('opens product detail and cart sheets from the feed', (
     tester,
   ) async {
     final product = sampleProducts.first;
+    final cartStore = CartStore();
 
     await tester.pumpWidget(
       MaterialApp(
-        home: FreshFeedScreen(products: sampleProducts, cartStore: CartStore()),
+        home: FreshFeedScreen(products: sampleProducts, cartStore: cartStore),
       ),
     );
 
     await tester.tap(find.text(product.name));
     await tester.pumpAndSettle();
 
-    expect(
-      find.byKey(Key('product-detail-placeholder-${product.id}')),
-      findsOneWidget,
-    );
+    expect(find.text(product.origin.name), findsWidgets);
+    expect(find.text('Suggested bundle'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Close detail'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('add-to-cart-bok-choy')));
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('floating-cart-pill')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Your fresh cart'), findsOneWidget);
+    expect(find.text(product.name), findsWidgets);
   });
 
   testWidgets('opens detail when tapping the product name panel', (

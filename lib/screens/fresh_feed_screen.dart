@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:kenko_shop/models/product.dart';
 import 'package:kenko_shop/state/cart_store.dart';
+import 'package:kenko_shop/widgets/cart_sheet.dart';
 import 'package:kenko_shop/widgets/floating_cart_pill.dart';
+import 'package:kenko_shop/widgets/product_detail_sheet.dart';
 import 'package:kenko_shop/widgets/product_scene.dart';
 
 class FreshFeedScreen extends StatefulWidget {
@@ -71,31 +73,37 @@ class _FreshFeedScreenState extends State<FreshFeedScreen> {
                   product: product,
                   now: _feedLoadedAt,
                   onAdd: () => widget.cartStore.add(product),
-                  onOpenDetail: () => _showProductDetail(context, product),
+                  onOpenDetail: () => _openDetail(product),
                 );
               },
             ),
           FloatingCartPill(
             count: widget.cartStore.totalQuantity,
-            onTap: () => _showCart(context),
+            onTap: _openCart,
           ),
         ],
       ),
     );
   }
 
-  Future<void> _showProductDetail(BuildContext context, Product product) {
+  Future<void> _openDetail(Product product) {
     return showModalBottomSheet<void>(
       context: context,
-      builder: (context) =>
-          SizedBox.shrink(key: Key('product-detail-placeholder-${product.id}')),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ProductDetailSheet(
+        product: product,
+        onAdd: () => widget.cartStore.add(product),
+      ),
     );
   }
 
-  Future<void> _showCart(BuildContext context) {
+  Future<void> _openCart() {
     return showModalBottomSheet<void>(
       context: context,
-      builder: (context) => const SizedBox.shrink(),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => CartSheet(cartStore: widget.cartStore),
     );
   }
 }
