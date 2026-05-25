@@ -7,19 +7,42 @@ import 'package:kenko_shop/widgets/product_scene.dart';
 
 void main() {
   testWidgets('adds a feed product to the floating cart', (tester) async {
+    final product = sampleProducts.first;
+
     await tester.pumpWidget(
       MaterialApp(
         home: FreshFeedScreen(products: sampleProducts, cartStore: CartStore()),
       ),
     );
 
-    expect(find.text('Da Lat Baby Bok Choy'), findsOneWidget);
+    expect(find.text(product.name), findsOneWidget);
+    expect(find.text(product.origin.name), findsOneWidget);
     expect(find.text('0'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('add-to-cart-bok-choy')));
     await tester.pump();
 
     expect(find.text('1'), findsOneWidget);
+  });
+
+  testWidgets('opens the feed detail placeholder when tapping product name', (
+    tester,
+  ) async {
+    final product = sampleProducts.first;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: FreshFeedScreen(products: sampleProducts, cartStore: CartStore()),
+      ),
+    );
+
+    await tester.tap(find.text(product.name));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(Key('product-detail-placeholder-${product.id}')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('opens detail when tapping the product name panel', (

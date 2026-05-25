@@ -87,7 +87,8 @@ class _FreshFeedScreenState extends State<FreshFeedScreen> {
   Future<void> _showProductDetail(BuildContext context, Product product) {
     return showModalBottomSheet<void>(
       context: context,
-      builder: (context) => const SizedBox.shrink(),
+      builder: (context) =>
+          SizedBox.shrink(key: Key('product-detail-placeholder-${product.id}')),
     );
   }
 

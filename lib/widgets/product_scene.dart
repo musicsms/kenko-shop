@@ -204,6 +204,29 @@ class _ProductCopy extends StatelessWidget {
                 height: 1.25,
               ),
             ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.agriculture_outlined,
+                  color: product.palette.secondary.withValues(alpha: 0.86),
+                  size: 16,
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    product.origin.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.labelLarge?.copyWith(
+                      color: KenkoColors.cream.withValues(alpha: 0.74),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 14),
             Text(
               '${product.price.toStringAsFixed(0)} VND / ${product.unit}',
