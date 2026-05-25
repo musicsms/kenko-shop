@@ -1,5 +1,7 @@
 .superpowers/
 .worktrees/
+.idea/
+*.iml
 .dart_tool/
 build/
 .flutter-plugins
