@@ -4,7 +4,7 @@ import 'package:kenko_shop/models/nutrition_tag.dart';
 import 'package:kenko_shop/models/product.dart';
 import 'package:kenko_shop/models/product_palette.dart';
 
-final sampleProducts = <Product>[
+final sampleProducts = List<Product>.unmodifiable([
   Product(
     id: 'bok-choy',
     name: 'Da Lat Baby Bok Choy',
@@ -33,19 +33,19 @@ final sampleProducts = <Product>[
     dropEndsAt: DateTime(2026, 5, 25, 20),
     bundleProductIds: ['king-oyster', 'purple-basil'],
   ),
-  const Product(
+  Product(
     id: 'dragon-fruit',
     name: 'Red Dragon Fruit',
     category: 'Fruit',
     price: 68000,
     unit: '2 pcs',
-    palette: ProductPalette(
+    palette: const ProductPalette(
       background: Color(0xFF1B1116),
       primary: Color(0xFFFF5C7A),
       secondary: Color(0xFFFFD1DC),
       accent: Color(0xFF74C365),
     ),
-    origin: FarmOrigin(
+    origin: const FarmOrigin(
       name: 'Binh Thuan Sun Field',
       region: 'Binh Thuan',
       story: 'Naturally ripened on the plant with no wax coating.',
@@ -53,7 +53,7 @@ final sampleProducts = <Product>[
     harvestLabel: 'Harvested yesterday',
     soilScore: 91,
     caption: 'Cold, bright, and built for smoothie bowls.',
-    nutritionTags: [
+    nutritionTags: const [
       NutritionTag(label: 'Antioxidants', value: 'Bright'),
       NutritionTag(label: 'Sugar', value: 'Natural'),
     ],
@@ -87,19 +87,19 @@ final sampleProducts = <Product>[
     dropEndsAt: DateTime(2026, 5, 25, 18, 30),
     bundleProductIds: ['purple-basil', 'organic-box'],
   ),
-  const Product(
+  Product(
     id: 'purple-basil',
     name: 'Purple Basil Bunch',
     category: 'Herbs',
     price: 28000,
     unit: '80g',
-    palette: ProductPalette(
+    palette: const ProductPalette(
       background: Color(0xFF151019),
       primary: Color(0xFF8E5AC7),
       secondary: Color(0xFFCDA8FF),
       accent: Color(0xFF7FBF66),
     ),
-    origin: FarmOrigin(
+    origin: const FarmOrigin(
       name: 'An Nhien Herb Garden',
       region: 'Gia Lam',
       story: 'Small-batch herb beds watered before dawn.',
@@ -107,25 +107,25 @@ final sampleProducts = <Product>[
     harvestLabel: 'Cut 05:50',
     soilScore: 89,
     caption: 'Aromatic lift for salads, noodles, and grilled veg.',
-    nutritionTags: [
+    nutritionTags: const [
       NutritionTag(label: 'Aroma', value: 'Strong'),
       NutritionTag(label: 'Polyphenols', value: 'Good'),
     ],
     bundleProductIds: ['bok-choy', 'king-oyster'],
   ),
-  const Product(
+  Product(
     id: 'king-oyster',
     name: 'King Oyster Mushroom',
     category: 'Mushrooms',
     price: 72000,
     unit: '250g',
-    palette: ProductPalette(
+    palette: const ProductPalette(
       background: Color(0xFF121417),
       primary: Color(0xFFD9C7A3),
       secondary: Color(0xFFF3E7CE),
       accent: Color(0xFF9AC46A),
     ),
-    origin: FarmOrigin(
+    origin: const FarmOrigin(
       name: 'North Cloud Grow House',
       region: 'Sa Pa',
       story: 'Slow-grown in a cool controlled room for dense texture.',
@@ -133,7 +133,7 @@ final sampleProducts = <Product>[
     harvestLabel: 'Picked 07:40',
     soilScore: 92,
     caption: 'Meaty slices for pan sear, broth, or vegan steak.',
-    nutritionTags: [
+    nutritionTags: const [
       NutritionTag(label: 'Protein', value: 'Plant'),
       NutritionTag(label: 'Umami', value: 'Deep'),
     ],
@@ -167,7 +167,7 @@ final sampleProducts = <Product>[
     dropEndsAt: DateTime(2026, 5, 25, 21),
     bundleProductIds: ['bok-choy', 'dragon-fruit', 'golden-carrot'],
   ),
-];
+]);
 
 Product? findProductById(String id) {
   for (final product in sampleProducts) {

@@ -4,7 +4,7 @@ String formatDropCountdown(DateTime? endsAt, DateTime now) {
   }
 
   final remaining = endsAt.difference(now);
-  if (remaining.inMinutes <= 0) {
+  if (remaining <= Duration.zero) {
     return 'Drop ended';
   }
 
@@ -12,6 +12,10 @@ String formatDropCountdown(DateTime? endsAt, DateTime now) {
   final minutes = remaining.inMinutes.remainder(60);
   if (hours > 0) {
     return '${hours}h ${minutes}m left';
+  }
+
+  if (remaining.inMinutes == 0) {
+    return '1m left';
   }
 
   return '${remaining.inMinutes}m left';

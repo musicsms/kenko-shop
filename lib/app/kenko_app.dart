@@ -10,9 +10,7 @@ class KenkoApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Kenko Fresh',
       theme: buildKenkoTheme(),
-      home: const Scaffold(
-        body: Center(child: Text('Kenko Fresh')),
-      ),
+      home: const Scaffold(body: Center(child: Text('Kenko Fresh'))),
     );
   }
 }

@@ -3,7 +3,7 @@ import 'package:kenko_shop/models/nutrition_tag.dart';
 import 'package:kenko_shop/models/product_palette.dart';
 
 class Product {
-  const Product({
+  Product({
     required this.id,
     required this.name,
     required this.category,
@@ -14,11 +14,12 @@ class Product {
     required this.harvestLabel,
     required this.soilScore,
     required this.caption,
-    required this.nutritionTags,
-    required this.bundleProductIds,
+    required List<NutritionTag> nutritionTags,
+    required List<String> bundleProductIds,
     this.isLimitedDrop = false,
     this.dropEndsAt,
-  });
+  }) : nutritionTags = List<NutritionTag>.unmodifiable(nutritionTags),
+       bundleProductIds = List<String>.unmodifiable(bundleProductIds);
 
   final String id;
   final String name;

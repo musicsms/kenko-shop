@@ -13,6 +13,13 @@ void main() {
     expect(formatDropCountdown(endsAt, now), '45m left');
   });
 
+  test('rounds positive sub-minute drops up to one minute', () {
+    final now = DateTime(2026, 5, 25, 8, 0, 0);
+    final endsAt = DateTime(2026, 5, 25, 8, 0, 30);
+
+    expect(formatDropCountdown(endsAt, now), '1m left');
+  });
+
   test('formats hours and minutes remaining', () {
     final now = DateTime(2026, 5, 25, 8);
     final endsAt = DateTime(2026, 5, 25, 10, 30);
