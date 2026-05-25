@@ -13,18 +13,20 @@ class ProductScene extends StatelessWidget {
     required this.onAdd,
     required this.onOpenDetail,
     super.key,
+    this.now,
   });
 
   final Product product;
   final VoidCallback onAdd;
   final VoidCallback onOpenDetail;
+  final DateTime? now;
 
   @override
   Widget build(BuildContext context) {
     final palette = product.palette;
     final countdownLabel = product.dropEndsAt == null
         ? ''
-        : formatDropCountdown(product.dropEndsAt, DateTime.now());
+        : formatDropCountdown(product.dropEndsAt, _countdownNow());
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -87,7 +89,10 @@ class ProductScene extends StatelessWidget {
                           ),
                         ),
                       ),
-                      _ProductCopy(product: product),
+                      _ProductCopy(
+                        product: product,
+                        onOpenDetail: onOpenDetail,
+                      ),
                       const SizedBox(height: 108),
                     ],
                   ),
@@ -103,6 +108,7 @@ class ProductScene extends StatelessWidget {
               heroTag: 'add-to-cart-${product.id}',
               backgroundColor: KenkoColors.cream,
               foregroundColor: KenkoColors.rawBlack,
+              tooltip: 'Add ${product.name} to cart',
               onPressed: onAdd,
               child: const Icon(Icons.add_shopping_cart),
             ),
@@ -110,6 +116,10 @@ class ProductScene extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  DateTime _countdownNow() {
+    return now ?? DateTime.now();
   }
 }
 
@@ -146,55 +156,65 @@ class _SceneHeader extends StatelessWidget {
 }
 
 class _ProductCopy extends StatelessWidget {
-  const _ProductCopy({required this.product});
+  const _ProductCopy({required this.product, required this.onOpenDetail});
 
   final Product product;
+  final VoidCallback onOpenDetail;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        FreshBadge(
-          label: 'Soil score ${product.soilScore}',
-          icon: Icons.verified_outlined,
-          backgroundColor: KenkoColors.soil,
-          foregroundColor: KenkoColors.cream,
-          borderColor: KenkoColors.cream.withValues(alpha: 0.18),
+    return Semantics(
+      button: true,
+      label: 'Open ${product.name}',
+      child: GestureDetector(
+        key: Key('product-panel-${product.id}'),
+        behavior: HitTestBehavior.opaque,
+        onTap: onOpenDetail,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FreshBadge(
+              label: 'Soil score ${product.soilScore}',
+              icon: Icons.verified_outlined,
+              backgroundColor: KenkoColors.soil,
+              foregroundColor: KenkoColors.cream,
+              borderColor: KenkoColors.cream.withValues(alpha: 0.18),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              product.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: textTheme.displaySmall?.copyWith(
+                color: KenkoColors.cream,
+                fontWeight: FontWeight.w900,
+                height: 0.98,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              product.caption,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: textTheme.bodyLarge?.copyWith(
+                color: KenkoColors.cream.withValues(alpha: 0.78),
+                height: 1.25,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              '${product.price.toStringAsFixed(0)} VND / ${product.unit}',
+              style: textTheme.titleLarge?.copyWith(
+                color: product.palette.accent,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 14),
-        Text(
-          product.name,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: textTheme.displaySmall?.copyWith(
-            color: KenkoColors.cream,
-            fontWeight: FontWeight.w900,
-            height: 0.98,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          product.caption,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: textTheme.bodyLarge?.copyWith(
-            color: KenkoColors.cream.withValues(alpha: 0.78),
-            height: 1.25,
-          ),
-        ),
-        const SizedBox(height: 14),
-        Text(
-          '${product.price.toStringAsFixed(0)} VND / ${product.unit}',
-          style: textTheme.titleLarge?.copyWith(
-            color: product.palette.accent,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

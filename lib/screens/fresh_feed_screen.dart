@@ -20,11 +20,13 @@ class FreshFeedScreen extends StatefulWidget {
 
 class _FreshFeedScreenState extends State<FreshFeedScreen> {
   late final PageController _pageController;
+  late final DateTime _feedLoadedAt;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    _feedLoadedAt = DateTime.now();
     widget.cartStore.addListener(_handleCartChanged);
   }
 
@@ -67,6 +69,7 @@ class _FreshFeedScreenState extends State<FreshFeedScreen> {
                 final product = widget.products[index];
                 return ProductScene(
                   product: product,
+                  now: _feedLoadedAt,
                   onAdd: () => widget.cartStore.add(product),
                   onOpenDetail: () => _showProductDetail(context, product),
                 );
