@@ -74,6 +74,7 @@ class ProductDetailSheet extends StatelessWidget {
               Text(
                 product.origin.story,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontSize: 15,
                   color: KenkoColors.rawBlack.withValues(alpha: 0.72),
                   height: 1.32,
                 ),
@@ -120,8 +121,11 @@ class ProductDetailSheet extends StatelessWidget {
                         Expanded(
                           child: Text(
                             bundleProduct.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.bodyLarge
                                 ?.copyWith(
+                                  fontSize: 15,
                                   color: KenkoColors.rawBlack,
                                   fontWeight: FontWeight.w700,
                                 ),

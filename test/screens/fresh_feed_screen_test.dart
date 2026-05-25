@@ -96,4 +96,46 @@ void main() {
 
     expect(find.text('3h 0m left'), findsOneWidget);
   });
+
+  testWidgets('cart controls and checkout confirmation fit narrow layouts', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final product = sampleProducts.first;
+    final cartStore = CartStore();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: FreshFeedScreen(products: sampleProducts, cartStore: cartStore),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.byKey(Key('add-to-cart-${product.id}')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('floating-cart-pill')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.byTooltip('Increase ${product.name}'));
+    await tester.pump();
+    await tester.tap(find.byTooltip('Decrease ${product.name}'));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.text('Checkout Demo'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Demo order packed. No payment was processed.'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
 }

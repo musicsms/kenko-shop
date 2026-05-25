@@ -45,6 +45,7 @@ class CartSheet extends StatelessWidget {
                     Text(
                       'Demo order packed. No payment was processed.',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontSize: 15,
                         color: KenkoColors.rawBlack.withValues(alpha: 0.72),
                       ),
                     )
@@ -52,6 +53,7 @@ class CartSheet extends StatelessWidget {
                     Text(
                       'Your basket is ready for the next fresh drop.',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontSize: 15,
                         color: KenkoColors.rawBlack.withValues(alpha: 0.72),
                       ),
                     )
@@ -67,6 +69,8 @@ class CartSheet extends StatelessWidget {
                                 children: [
                                   Text(
                                     item.product.name,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleMedium
@@ -78,6 +82,8 @@ class CartSheet extends StatelessWidget {
                                   const SizedBox(height: 4),
                                   Text(
                                     '${item.product.price.toStringAsFixed(0)} VND / ${item.product.unit}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodyMedium
@@ -133,13 +139,18 @@ class CartSheet extends StatelessWidget {
                                 ),
                           ),
                         ),
-                        Text(
-                          '${cartStore.subtotal.toStringAsFixed(0)} VND',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: KenkoColors.rawBlack,
-                                fontWeight: FontWeight.w900,
-                              ),
+                        Flexible(
+                          child: Text(
+                            '${cartStore.subtotal.toStringAsFixed(0)} VND',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.end,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  color: KenkoColors.rawBlack,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                          ),
                         ),
                       ],
                     ),

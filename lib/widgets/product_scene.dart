@@ -52,6 +52,11 @@ class ProductScene extends StatelessWidget {
                   constraints.maxWidth * 0.72,
                   math.min(constraints.maxHeight * 0.42, 320.0),
                 );
+                final copyBandHeight = math.min(
+                  constraints.maxHeight * 0.34,
+                  238.0,
+                );
+                final copyMaxWidth = math.max(constraints.maxWidth - 48, 240.0);
 
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
@@ -89,9 +94,24 @@ class ProductScene extends StatelessWidget {
                           ),
                         ),
                       ),
-                      _ProductCopy(
-                        product: product,
-                        onOpenDetail: onOpenDetail,
+                      SizedBox(
+                        height: copyBandHeight,
+                        child: Align(
+                          alignment: Alignment.bottomLeft,
+                          child: FittedBox(
+                            alignment: Alignment.bottomLeft,
+                            fit: BoxFit.scaleDown,
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: copyMaxWidth,
+                              ),
+                              child: _ProductCopy(
+                                product: product,
+                                onOpenDetail: onOpenDetail,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 108),
                     ],
@@ -200,6 +220,7 @@ class _ProductCopy extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: textTheme.bodyLarge?.copyWith(
+                fontSize: 15,
                 color: KenkoColors.cream.withValues(alpha: 0.78),
                 height: 1.25,
               ),
