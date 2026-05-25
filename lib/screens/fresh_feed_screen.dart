@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:kenko_shop/models/product.dart';
 import 'package:kenko_shop/state/cart_store.dart';
@@ -22,13 +24,22 @@ class FreshFeedScreen extends StatefulWidget {
 
 class _FreshFeedScreenState extends State<FreshFeedScreen> {
   late final PageController _pageController;
-  late final DateTime _feedLoadedAt;
+  late DateTime _now;
+  Timer? _countdownTimer;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
-    _feedLoadedAt = DateTime.now();
+    _now = DateTime.now();
+    _countdownTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _now = DateTime.now();
+      });
+    });
     widget.cartStore.addListener(_handleCartChanged);
   }
 
@@ -43,6 +54,7 @@ class _FreshFeedScreenState extends State<FreshFeedScreen> {
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
     widget.cartStore.removeListener(_handleCartChanged);
     _pageController.dispose();
     super.dispose();
@@ -71,7 +83,7 @@ class _FreshFeedScreenState extends State<FreshFeedScreen> {
                 final product = widget.products[index];
                 return ProductScene(
                   product: product,
-                  now: _feedLoadedAt,
+                  now: _now,
                   onAdd: () => widget.cartStore.add(product),
                   onOpenDetail: () => _openDetail(product),
                 );

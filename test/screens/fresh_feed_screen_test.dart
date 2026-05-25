@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kenko_shop/data/sample_products.dart';
 import 'package:kenko_shop/screens/fresh_feed_screen.dart';
 import 'package:kenko_shop/state/cart_store.dart';
+import 'package:kenko_shop/widgets/product_detail_sheet.dart';
 import 'package:kenko_shop/widgets/product_scene.dart';
 
 void main() {
@@ -95,6 +96,54 @@ void main() {
     );
 
     expect(find.text('3h 0m left'), findsOneWidget);
+  });
+
+  testWidgets('updates countdown when injected time changes', (tester) async {
+    final product = sampleProducts.first;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ProductScene(
+          product: product,
+          now: DateTime(2026, 5, 25, 17),
+          onAdd: () {},
+          onOpenDetail: () {},
+        ),
+      ),
+    );
+
+    expect(find.text('3h 0m left'), findsOneWidget);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ProductScene(
+          product: product,
+          now: DateTime(2026, 5, 25, 17, 1),
+          onAdd: () {},
+          onOpenDetail: () {},
+        ),
+      ),
+    );
+
+    expect(find.text('3h 0m left'), findsNothing);
+    expect(find.text('2h 59m left'), findsOneWidget);
+  });
+
+  testWidgets('detail sheet shows price and taste use notes', (tester) async {
+    final product = sampleProducts.first;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ProductDetailSheet(product: product, onAdd: () {}),
+      ),
+    );
+
+    expect(
+      find.text('${product.price.toStringAsFixed(0)} VND / ${product.unit}'),
+      findsOneWidget,
+    );
+    expect(find.text('Taste & use'), findsOneWidget);
+    expect(find.text(product.caption), findsOneWidget);
   });
 
   testWidgets('cart controls and checkout confirmation fit narrow layouts', (

@@ -64,6 +64,31 @@ class ProductDetailSheet extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
+                '${product.price.toStringAsFixed(0)} VND / ${product.unit}',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: product.palette.primary,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Taste & use',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: KenkoColors.rawBlack,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                product.caption,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontSize: 15,
+                  color: KenkoColors.rawBlack.withValues(alpha: 0.72),
+                  height: 1.32,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
                 product.origin.name,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: KenkoColors.moss,
