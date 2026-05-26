@@ -79,6 +79,9 @@ alter table public.product_bundles enable row level security;
 alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
 
+revoke all on table public.products, public.product_nutrition_tags, public.product_bundles, public.orders, public.order_items from anon, public;
+grant select on table public.products, public.product_nutrition_tags, public.product_bundles to anon;
+
 drop policy if exists "anon can read active products" on public.products;
 create policy "anon can read active products"
 on public.products
@@ -137,7 +140,7 @@ declare
   trimmed_phone text := btrim(customer_phone);
   trimmed_address text := btrim(delivery_address);
   order_id uuid := gen_random_uuid();
-  order_code text := 'KF-' || upper(substr(encode(gen_random_bytes(6), 'hex'), 1, 10));
+  order_code text := 'KF-' || upper(encode(gen_random_bytes(8), 'hex'));
   computed_total integer := 0;
   item jsonb;
   item_slug text;
@@ -164,6 +167,10 @@ begin
 
   if jsonb_array_length(items) = 0 then
     raise exception 'items_required' using errcode = '22023';
+  end if;
+
+  if jsonb_array_length(items) > 30 then
+    raise exception 'too_many_items' using errcode = '22023';
   end if;
 
   insert into public.orders (
