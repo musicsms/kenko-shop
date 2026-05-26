@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kenko_shop/app/theme.dart';
 import 'package:kenko_shop/config/app_config.dart';
+import 'package:kenko_shop/data/order_repository.dart';
 import 'package:kenko_shop/data/product_repository.dart';
 import 'package:kenko_shop/screens/fresh_feed_screen.dart';
 import 'package:kenko_shop/state/cart_store.dart';
@@ -18,6 +19,7 @@ class KenkoApp extends StatefulWidget {
 
 class _KenkoAppState extends State<KenkoApp> {
   late final CartStore _cartStore;
+  late final OrderRepository? _orderRepository;
   late final ProductRepository _productRepository;
   late final ProductFeedStore _productFeedStore;
 
@@ -28,6 +30,9 @@ class _KenkoAppState extends State<KenkoApp> {
     _productRepository = widget.config.hasSupabaseConfig
         ? ProductRepository.remote(Supabase.instance.client)
         : ProductRepository.offline();
+    _orderRepository = widget.config.hasSupabaseConfig
+        ? OrderRepository(Supabase.instance.client)
+        : null;
     _productFeedStore = ProductFeedStore(_productRepository.fetchProducts);
   }
 
@@ -47,6 +52,7 @@ class _KenkoAppState extends State<KenkoApp> {
       home: FreshFeedScreen(
         productFeedStore: _productFeedStore,
         cartStore: _cartStore,
+        guestCheckoutSubmitter: _orderRepository?.createGuestOrder,
       ),
     );
   }

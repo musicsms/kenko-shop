@@ -13,11 +13,13 @@ class FreshFeedScreen extends StatefulWidget {
   const FreshFeedScreen({
     required this.productFeedStore,
     required this.cartStore,
+    this.guestCheckoutSubmitter,
     super.key,
   });
 
   final ProductFeedStore productFeedStore;
   final CartStore cartStore;
+  final GuestCheckoutSubmitter? guestCheckoutSubmitter;
 
   @override
   State<FreshFeedScreen> createState() => _FreshFeedScreenState();
@@ -161,7 +163,10 @@ class _FreshFeedScreenState extends State<FreshFeedScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => CartSheet(cartStore: widget.cartStore),
+      builder: (context) => CartSheet(
+        cartStore: widget.cartStore,
+        guestCheckoutSubmitter: widget.guestCheckoutSubmitter,
+      ),
     );
   }
 }

@@ -3,10 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kenko_shop/data/sample_products.dart';
+import 'package:kenko_shop/models/guest_order.dart';
+import 'package:kenko_shop/models/order_result.dart';
 import 'package:kenko_shop/models/product.dart';
 import 'package:kenko_shop/screens/fresh_feed_screen.dart';
 import 'package:kenko_shop/state/cart_store.dart';
 import 'package:kenko_shop/state/product_feed_store.dart';
+import 'package:kenko_shop/widgets/cart_sheet.dart';
 import 'package:kenko_shop/widgets/product_detail_sheet.dart';
 import 'package:kenko_shop/widgets/product_scene.dart';
 
@@ -20,12 +23,14 @@ Future<void> pumpFreshFeed(
   WidgetTester tester, {
   required CartStore cartStore,
   ProductFeedStore? store,
+  GuestCheckoutSubmitter? guestCheckoutSubmitter,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
       home: FreshFeedScreen(
         productFeedStore: store ?? productFeedStore(),
         cartStore: cartStore,
+        guestCheckoutSubmitter: guestCheckoutSubmitter,
       ),
     ),
   );
@@ -232,6 +237,90 @@ void main() {
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('guest checkout validates required fields', (tester) async {
+    final cartStore = CartStore();
+
+    await pumpFreshFeed(
+      tester,
+      cartStore: cartStore,
+      guestCheckoutSubmitter: (_) async => const OrderResult(
+        orderId: 'order-test',
+        orderCode: 'KF-TEST',
+        total: 0,
+        status: 'new',
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('add-to-cart-bok-choy')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('floating-cart-pill')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Checkout'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('guest-submit-order')));
+    await tester.pump();
+
+    expect(find.text('Name is required'), findsOneWidget);
+    expect(find.text('Phone is required'), findsOneWidget);
+    expect(find.text('Address is required'), findsOneWidget);
+  });
+
+  testWidgets('successful remote guest checkout confirms order', (
+    tester,
+  ) async {
+    final product = sampleProducts.first;
+    final cartStore = CartStore();
+    GuestOrderRequest? submittedRequest;
+
+    await pumpFreshFeed(
+      tester,
+      cartStore: cartStore,
+      guestCheckoutSubmitter: (request) async {
+        submittedRequest = request;
+        return OrderResult(
+          orderId: 'order-test',
+          orderCode: 'KF-TEST',
+          total: product.price.toInt(),
+          status: 'new',
+        );
+      },
+    );
+
+    await tester.tap(find.byKey(Key('add-to-cart-${product.id}')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('floating-cart-pill')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Checkout'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('guest-name-field')),
+      'Mina Tan',
+    );
+    await tester.enterText(
+      find.byKey(const Key('guest-phone-field')),
+      '0901234567',
+    );
+    await tester.enterText(
+      find.byKey(const Key('guest-address-field')),
+      '12 Market Lane',
+    );
+    await tester.enterText(
+      find.byKey(const Key('guest-note-field')),
+      'Leave at door',
+    );
+    await tester.tap(find.byKey(const Key('guest-submit-order')));
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Order KF-TEST'), findsOneWidget);
+    expect(submittedRequest, isNotNull);
+    expect(submittedRequest!.items.single.productSlug, product.id);
+    expect(submittedRequest!.items.single.quantity, 1);
+    expect(cartStore.isEmpty, isTrue);
   });
 
   testWidgets('shows feed load errors and retries loading products', (
