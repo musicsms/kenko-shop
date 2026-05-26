@@ -1,7 +1,8 @@
-create extension if not exists pgcrypto;
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
 
 create table if not exists public.products (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key default extensions.gen_random_uuid(),
   slug text unique not null,
   name text not null,
   category text not null,
@@ -25,7 +26,7 @@ create table if not exists public.products (
 );
 
 create table if not exists public.product_nutrition_tags (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key default extensions.gen_random_uuid(),
   product_id uuid not null constraint product_nutrition_tags_product_fk references public.products(id) on delete cascade,
   label text not null,
   value text not null,
@@ -41,7 +42,7 @@ create table if not exists public.product_bundles (
 );
 
 create table if not exists public.orders (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key default extensions.gen_random_uuid(),
   order_code text unique not null,
   customer_name text not null,
   customer_phone text not null,
@@ -54,7 +55,7 @@ create table if not exists public.orders (
 );
 
 create table if not exists public.order_items (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key default extensions.gen_random_uuid(),
   order_id uuid not null constraint order_items_order_fk references public.orders(id) on delete cascade,
   product_id uuid constraint order_items_product_fk references public.products(id) on delete set null,
   product_name text not null,
@@ -63,6 +64,11 @@ create table if not exists public.order_items (
   quantity integer not null check (quantity > 0),
   line_total integer not null check (line_total >= 0)
 );
+
+alter table public.products alter column id set default extensions.gen_random_uuid();
+alter table public.product_nutrition_tags alter column id set default extensions.gen_random_uuid();
+alter table public.orders alter column id set default extensions.gen_random_uuid();
+alter table public.order_items alter column id set default extensions.gen_random_uuid();
 
 create index if not exists products_active_created_idx on public.products (is_active, created_at desc);
 create index if not exists product_nutrition_tags_product_sort_idx on public.product_nutrition_tags (product_id, sort_order);
@@ -139,8 +145,8 @@ declare
   trimmed_name text := btrim(customer_name);
   trimmed_phone text := btrim(customer_phone);
   trimmed_address text := btrim(delivery_address);
-  order_id uuid := gen_random_uuid();
-  order_code text := 'KF-' || upper(encode(gen_random_bytes(8), 'hex'));
+  order_id uuid := extensions.gen_random_uuid();
+  order_code text := 'KF-' || upper(encode(extensions.gen_random_bytes(8), 'hex'));
   computed_total integer := 0;
   item jsonb;
   item_slug text;
