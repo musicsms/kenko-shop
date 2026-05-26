@@ -9,3 +9,6 @@ build/
 .packages
 ios/Pods/
 android/.gradle/
+supabase/.env
+supabase/volumes/
+supabase/.branches/
