@@ -21,14 +21,14 @@ Studio is exposed through the Supabase API gateway. Use the host and ports confi
 
 ## Apply Kenko Migrations
 
-After the database is healthy, apply migrations with `psql` using the Postgres connection details from `.env`:
+After the database is healthy, apply the Kenko Fresh migrations in order with `psql` using the Postgres connection details from `.env`:
 
 ```bash
 psql "$POSTGRES_URL" -f migrations/001_kenko_schema.sql
 psql "$POSTGRES_URL" -f migrations/002_seed_products.sql
 ```
 
-If using the default Docker network from this directory, you can also run `psql` from a Postgres client container or host-installed client.
+Run the commands from this directory. You can use a host-installed `psql` or a Postgres client container attached to the default Docker network.
 
 ## Flutter
 

@@ -1,12 +1,36 @@
-# kenko_shop
+# Kenko Fresh
 
-A new Flutter project.
+Flutter storefront MVP for Kenko Fresh.
 
-## Getting Started
+## Kenko Fresh MVP
 
-This project is a starting point for a Flutter application.
+Run offline fixture mode:
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+flutter run
+```
+
+Run with self-hosted Supabase:
+
+```bash
+flutter run \
+  --dart-define=SUPABASE_URL=http://localhost:8000 \
+  --dart-define=SUPABASE_ANON_KEY=<anon-key>
+```
+
+For Android emulators, use a reachable host such as `http://10.0.2.2:8000` instead of `localhost`.
+
+Validate Flutter:
+
+```bash
+flutter analyze
+flutter test
+flutter build apk --debug
+```
+
+Supabase self-host files live in `supabase/`. Copy `supabase/.env.example` to `supabase/.env`, replace placeholder secrets, run `docker compose up -d` from `supabase/`, then apply migrations from `supabase/migrations/`.
+
+## Flutter Resources
 
 - [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
 - [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
