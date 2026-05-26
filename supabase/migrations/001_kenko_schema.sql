@@ -112,6 +112,12 @@ using (
     where p.id = product_bundles.product_id
       and p.is_active = true
   )
+  and exists (
+    select 1
+    from public.products rp
+    where rp.id = product_bundles.related_product_id
+      and rp.is_active = true
+  )
 );
 
 create or replace function public.create_guest_order(
