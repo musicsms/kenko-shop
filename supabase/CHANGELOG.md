@@ -2,7 +2,7 @@
 
 All notable changes to the Supabase self-hosted Docker configuration.
 
-Changes are grouped by service rather than by change type. See [versions.md](./versions.md) 
+Changes are grouped by service rather than by change type. See [versions.md](./versions.md)
 for complete image version history and rollback information.
 
 See per-service updates below for details.
