@@ -20,6 +20,8 @@ flutter run \
 
 For Android emulators, use a reachable host such as `http://10.0.2.2:8000` instead of `localhost`.
 
+For real Android phones with the backend running on a VPS, use the Tailscale HTTPS flow in [Mobile Device Testing](docs/mobile-device-testing.md).
+
 Validate Flutter:
 
 ```bash
