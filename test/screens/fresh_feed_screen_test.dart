@@ -1,20 +1,74 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kenko_shop/data/sample_products.dart';
+import 'package:kenko_shop/models/product.dart';
 import 'package:kenko_shop/screens/fresh_feed_screen.dart';
 import 'package:kenko_shop/state/cart_store.dart';
+import 'package:kenko_shop/state/product_feed_store.dart';
 import 'package:kenko_shop/widgets/product_detail_sheet.dart';
 import 'package:kenko_shop/widgets/product_scene.dart';
 
+ProductFeedStore productFeedStore([Future<List<Product>> Function()? loader]) {
+  final store = ProductFeedStore(loader ?? () async => sampleProducts);
+  addTearDown(store.dispose);
+  return store;
+}
+
+Future<void> pumpFreshFeed(
+  WidgetTester tester, {
+  required CartStore cartStore,
+  ProductFeedStore? store,
+}) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      home: FreshFeedScreen(
+        productFeedStore: store ?? productFeedStore(),
+        cartStore: cartStore,
+      ),
+    ),
+  );
+  await tester.pump();
+  await tester.pump();
+}
+
 void main() {
-  testWidgets('adds a feed product to the floating cart', (tester) async {
-    final product = sampleProducts.first;
+  testWidgets('shows loading while feed products load', (tester) async {
+    final completer = Completer<List<Product>>();
+    final store = productFeedStore(() => completer.future);
 
     await tester.pumpWidget(
       MaterialApp(
-        home: FreshFeedScreen(products: sampleProducts, cartStore: CartStore()),
+        home: FreshFeedScreen(productFeedStore: store, cartStore: CartStore()),
       ),
     );
+    await tester.pump();
+
+    expect(find.byKey(const Key('feed-loading')), findsOneWidget);
+
+    completer.complete(sampleProducts);
+    await tester.pump();
+
+    expect(find.byKey(const Key('feed-loading')), findsNothing);
+    expect(find.text(sampleProducts.first.name), findsOneWidget);
+  });
+
+  testWidgets('shows empty feed state when no products load', (tester) async {
+    await pumpFreshFeed(
+      tester,
+      cartStore: CartStore(),
+      store: productFeedStore(() async => []),
+    );
+
+    expect(find.byKey(const Key('feed-empty')), findsOneWidget);
+    expect(find.text('KENKO FRESH'), findsOneWidget);
+  });
+
+  testWidgets('adds a feed product to the floating cart', (tester) async {
+    final product = sampleProducts.first;
+
+    await pumpFreshFeed(tester, cartStore: CartStore());
 
     expect(find.text(product.name), findsOneWidget);
     expect(find.text(product.origin.name), findsOneWidget);
@@ -32,11 +86,7 @@ void main() {
     final product = sampleProducts.first;
     final cartStore = CartStore();
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: FreshFeedScreen(products: sampleProducts, cartStore: cartStore),
-      ),
-    );
+    await pumpFreshFeed(tester, cartStore: cartStore);
 
     await tester.tap(find.text(product.name));
     await tester.pumpAndSettle();
@@ -159,11 +209,7 @@ void main() {
     final product = sampleProducts.first;
     final cartStore = CartStore();
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: FreshFeedScreen(products: sampleProducts, cartStore: cartStore),
-      ),
-    );
+    await pumpFreshFeed(tester, cartStore: cartStore);
     expect(tester.takeException(), isNull);
 
     await tester.tap(find.byKey(Key('add-to-cart-${product.id}')));
@@ -186,5 +232,31 @@ void main() {
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('shows feed load errors and retries loading products', (
+    tester,
+  ) async {
+    var attempts = 0;
+    final store = productFeedStore(() async {
+      attempts += 1;
+      if (attempts == 1) {
+        throw Exception('offline');
+      }
+      return sampleProducts;
+    });
+
+    await pumpFreshFeed(tester, cartStore: CartStore(), store: store);
+
+    expect(find.byKey(const Key('feed-error')), findsOneWidget);
+    expect(find.textContaining('offline'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('feed-retry')));
+    await tester.pump();
+    await tester.pump();
+
+    expect(attempts, 2);
+    expect(find.byKey(const Key('feed-error')), findsNothing);
+    expect(find.text(sampleProducts.first.name), findsOneWidget);
   });
 }

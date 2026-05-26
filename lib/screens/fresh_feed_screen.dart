@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:kenko_shop/models/product.dart';
 import 'package:kenko_shop/state/cart_store.dart';
+import 'package:kenko_shop/state/product_feed_store.dart';
 import 'package:kenko_shop/widgets/cart_sheet.dart';
 import 'package:kenko_shop/widgets/floating_cart_pill.dart';
 import 'package:kenko_shop/widgets/product_detail_sheet.dart';
@@ -10,12 +11,12 @@ import 'package:kenko_shop/widgets/product_scene.dart';
 
 class FreshFeedScreen extends StatefulWidget {
   const FreshFeedScreen({
-    required this.products,
+    required this.productFeedStore,
     required this.cartStore,
     super.key,
   });
 
-  final List<Product> products;
+  final ProductFeedStore productFeedStore;
   final CartStore cartStore;
 
   @override
@@ -40,12 +41,19 @@ class _FreshFeedScreenState extends State<FreshFeedScreen> {
         _now = DateTime.now();
       });
     });
+    widget.productFeedStore.addListener(_handleStoreChanged);
     widget.cartStore.addListener(_handleCartChanged);
+    unawaited(widget.productFeedStore.load());
   }
 
   @override
   void didUpdateWidget(covariant FreshFeedScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.productFeedStore != widget.productFeedStore) {
+      oldWidget.productFeedStore.removeListener(_handleStoreChanged);
+      widget.productFeedStore.addListener(_handleStoreChanged);
+      unawaited(widget.productFeedStore.load());
+    }
     if (oldWidget.cartStore != widget.cartStore) {
       oldWidget.cartStore.removeListener(_handleCartChanged);
       widget.cartStore.addListener(_handleCartChanged);
@@ -55,9 +63,17 @@ class _FreshFeedScreenState extends State<FreshFeedScreen> {
   @override
   void dispose() {
     _countdownTimer?.cancel();
+    widget.productFeedStore.removeListener(_handleStoreChanged);
     widget.cartStore.removeListener(_handleCartChanged);
     _pageController.dispose();
     super.dispose();
+  }
+
+  void _handleStoreChanged() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {});
   }
 
   void _handleCartChanged() {
@@ -69,18 +85,48 @@ class _FreshFeedScreenState extends State<FreshFeedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final productFeedStore = widget.productFeedStore;
+    final products = productFeedStore.products;
+
     return Scaffold(
       body: Stack(
         children: [
-          if (widget.products.isEmpty)
-            const Center(child: Text('KENKO FRESH'))
+          if (productFeedStore.isLoading)
+            const Center(
+              key: Key('feed-loading'),
+              child: CircularProgressIndicator(),
+            )
+          else if (productFeedStore.errorMessage != null)
+            Center(
+              key: const Key('feed-error'),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      productFeedStore.errorMessage!,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    key: const Key('feed-retry'),
+                    onPressed: () => unawaited(productFeedStore.load()),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            )
+          else if (productFeedStore.isEmpty)
+            const Center(key: Key('feed-empty'), child: Text('KENKO FRESH'))
           else
             PageView.builder(
               controller: _pageController,
               scrollDirection: Axis.vertical,
-              itemCount: widget.products.length,
+              itemCount: products.length,
               itemBuilder: (context, index) {
-                final product = widget.products[index];
+                final product = products[index];
                 return ProductScene(
                   product: product,
                   now: _now,
