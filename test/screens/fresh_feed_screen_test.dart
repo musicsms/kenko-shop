@@ -118,6 +118,8 @@ void main() {
 
     expect(find.text('Your fresh cart'), findsOneWidget);
     expect(find.text(product.name), findsWidgets);
+    expect(find.text('Checkout Demo'), findsOneWidget);
+    expect(find.text('Sign in for faster checkout'), findsNothing);
   });
 
   testWidgets('opens detail when tapping the product name panel', (
@@ -229,7 +231,11 @@ void main() {
     await tester.pump();
     await tester.tap(find.byKey(const Key('compact-nav-cart')));
     await tester.pumpAndSettle();
+
     expect(tester.takeException(), isNull);
+    expect(find.text(product.name), findsWidgets);
+    expect(find.text('Checkout Demo'), findsOneWidget);
+    expect(find.text('Sign in for faster checkout'), findsNothing);
 
     await tester.tap(find.byTooltip('Increase ${product.name}'));
     await tester.pump();
@@ -266,7 +272,31 @@ void main() {
     await tester.tap(find.byKey(const Key('compact-nav-cart')));
     await tester.pumpAndSettle();
 
+    expect(find.text('Checkout'), findsOneWidget);
+    expect(find.text('Sign in for faster checkout'), findsNothing);
+
     await tester.tap(find.text('Checkout'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sign in for faster checkout'), findsOneWidget);
+    expect(find.text('Continue with phone'), findsOneWidget);
+    expect(find.text('Continue with email'), findsOneWidget);
+    expect(find.text('Google'), findsOneWidget);
+    expect(find.text('Facebook'), findsOneWidget);
+    expect(find.text('Instagram'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('continue-as-guest')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Guest orders need phone verification'),
+      findsOneWidget,
+    );
+
+    await tester.drag(
+      find.byKey(const Key('cart-sheet-scroll')),
+      const Offset(0, -180),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('guest-submit-order')));
     await tester.pump();
@@ -296,7 +326,10 @@ void main() {
     await tester.pump();
     await tester.tap(find.byKey(const Key('compact-nav-cart')));
     await tester.pumpAndSettle();
+
     await tester.tap(find.text('Checkout'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('continue-as-guest')));
     await tester.pumpAndSettle();
 
     final nameField = tester.widget<TextField>(
@@ -336,7 +369,14 @@ void main() {
     await tester.tap(find.byKey(const Key('compact-nav-cart')));
     await tester.pumpAndSettle();
 
+    expect(find.text('Checkout'), findsOneWidget);
+    expect(find.text('Sign in for faster checkout'), findsNothing);
+
     await tester.tap(find.text('Checkout'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sign in for faster checkout'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('continue-as-guest')));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('guest-name-field')),
@@ -354,15 +394,28 @@ void main() {
       find.byKey(const Key('guest-note-field')),
       'Leave at door',
     );
+    await tester.drag(
+      find.byKey(const Key('cart-sheet-scroll')),
+      const Offset(0, -180),
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('guest-submit-order')));
     await tester.pump();
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Order KF-TEST'), findsOneWidget);
+    expect(find.text('Create account to track'), findsOneWidget);
+    expect(find.text('Continue shopping'), findsOneWidget);
     expect(submittedRequest, isNotNull);
     expect(submittedRequest!.items.single.productSlug, product.id);
     expect(submittedRequest!.items.single.quantity, 1);
     expect(cartStore.isEmpty, isTrue);
+
+    await tester.tap(find.byKey(const Key('continue-shopping')));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Order KF-TEST'), findsNothing);
+    expect(find.text(sampleProducts.first.name), findsOneWidget);
   });
 
   testWidgets('shows feed load errors and retries loading products', (

@@ -7,6 +7,8 @@ import 'package:kenko_shop/state/cart_store.dart';
 typedef GuestCheckoutSubmitter =
     Future<OrderResult> Function(GuestOrderRequest request);
 
+enum _CartSheetStep { cart, accountGate, guestForm }
+
 class CartSheet extends StatefulWidget {
   const CartSheet({
     required this.cartStore,
@@ -27,7 +29,7 @@ class _CartSheetState extends State<CartSheet> {
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
   final _noteController = TextEditingController();
-  bool _showGuestForm = false;
+  _CartSheetStep _step = _CartSheetStep.cart;
   bool _isSubmitting = false;
   OrderResult? _orderResult;
   String? _submitError;
@@ -47,9 +49,9 @@ class _CartSheetState extends State<CartSheet> {
       animation: widget.cartStore,
       builder: (context, child) {
         return DraggableScrollableSheet(
-          key: ValueKey(_showGuestForm),
+          key: ValueKey('cart-sheet-$_step-${_orderResult != null}'),
           expand: false,
-          initialChildSize: _showGuestForm ? 0.88 : 0.58,
+          initialChildSize: _initialChildSize,
           minChildSize: 0.28,
           maxChildSize: 0.95,
           builder: (context, scrollController) {
@@ -59,12 +61,13 @@ class _CartSheetState extends State<CartSheet> {
                 borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               ),
               child: ListView(
+                key: const Key('cart-sheet-scroll'),
                 controller: scrollController,
                 padding: EdgeInsets.fromLTRB(
                   24,
                   18,
                   24,
-                  28 + MediaQuery.viewPaddingOf(context).bottom,
+                  84 + MediaQuery.viewPaddingOf(context).bottom,
                 ),
                 children: [
                   const Center(child: _SheetHandle()),
@@ -77,7 +80,11 @@ class _CartSheetState extends State<CartSheet> {
                   ),
                   const SizedBox(height: 18),
                   if (_orderResult != null)
-                    _OrderConfirmation(result: _orderResult!)
+                    _OrderConfirmation(
+                      result: _orderResult!,
+                      onCreateAccount: _showAccountComingSoon,
+                      onContinueShopping: () => Navigator.of(context).pop(),
+                    )
                   else if (widget.cartStore.checkoutComplete)
                     const _MutedText(
                       'Demo order packed. No payment was processed.',
@@ -90,8 +97,17 @@ class _CartSheetState extends State<CartSheet> {
                         color: KenkoColors.rawBlack.withValues(alpha: 0.72),
                       ),
                     )
+                  else if (_step == _CartSheetStep.accountGate)
+                    _AccountPrompt(
+                      onContinueAsGuest: () {
+                        setState(() {
+                          _step = _CartSheetStep.guestForm;
+                        });
+                      },
+                      onAuthSelected: _showAccountComingSoon,
+                    )
                   else ...[
-                    if (_showGuestForm &&
+                    if (_step == _CartSheetStep.guestForm &&
                         widget.guestCheckoutSubmitter != null) ...[
                       _CheckoutSummary(cartStore: widget.cartStore),
                       const SizedBox(height: 16),
@@ -186,7 +202,7 @@ class _CartSheetState extends State<CartSheet> {
                         FilledButton(
                           onPressed: () {
                             setState(() {
-                              _showGuestForm = true;
+                              _step = _CartSheetStep.accountGate;
                               _submitError = null;
                             });
                           },
@@ -201,6 +217,18 @@ class _CartSheetState extends State<CartSheet> {
         );
       },
     );
+  }
+
+  double get _initialChildSize {
+    if (_orderResult != null) {
+      return 0.86;
+    }
+
+    return switch (_step) {
+      _CartSheetStep.accountGate => 0.9,
+      _CartSheetStep.guestForm => 0.95,
+      _CartSheetStep.cart => 0.58,
+    };
   }
 
   Future<void> _submitGuestOrder() async {
@@ -251,6 +279,170 @@ class _CartSheetState extends State<CartSheet> {
         _submitError = 'Could not place order. Please try again.';
       });
     }
+  }
+
+  void _showAccountComingSoon() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Account sign-in and order tracking are coming next.'),
+      ),
+    );
+  }
+}
+
+class _AccountPrompt extends StatelessWidget {
+  const _AccountPrompt({
+    required this.onContinueAsGuest,
+    required this.onAuthSelected,
+  });
+
+  final VoidCallback onContinueAsGuest;
+  final VoidCallback onAuthSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: KenkoColors.rawBlack,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: const BoxDecoration(
+                        color: KenkoColors.harvest,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.verified_user_outlined,
+                        color: KenkoColors.rawBlack,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Sign in for faster checkout',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: KenkoColors.cream,
+                              fontWeight: FontWeight.w900,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Track orders, speed up verification, and keep checkout details saved.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: KenkoColors.cream.withValues(alpha: 0.76),
+                    height: 1.25,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        _AuthButton(
+          icon: Icons.phone_iphone_rounded,
+          label: 'Continue with phone',
+          onTap: onAuthSelected,
+        ),
+        const SizedBox(height: 8),
+        _AuthButton(
+          icon: Icons.alternate_email_rounded,
+          label: 'Continue with email',
+          onTap: onAuthSelected,
+        ),
+        const SizedBox(height: 10),
+        OutlinedButton(
+          key: const Key('continue-as-guest'),
+          onPressed: onContinueAsGuest,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: KenkoColors.rawBlack,
+            side: BorderSide(
+              color: KenkoColors.rawBlack.withValues(alpha: 0.28),
+            ),
+          ),
+          child: const Text('Continue as guest'),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _SocialAuthButton(label: 'Google', onTap: onAuthSelected),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _SocialAuthButton(
+                label: 'Facebook',
+                onTap: onAuthSelected,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _SocialAuthButton(
+                label: 'Instagram',
+                onTap: onAuthSelected,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _AuthButton extends StatelessWidget {
+  const _AuthButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon),
+      label: Text(label),
+    );
+  }
+}
+
+class _SocialAuthButton extends StatelessWidget {
+  const _SocialAuthButton({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: KenkoColors.rawBlack,
+        side: BorderSide(color: KenkoColors.rawBlack.withValues(alpha: 0.2)),
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+      ),
+      child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+    );
   }
 }
 
@@ -342,6 +534,8 @@ class _GuestCheckoutForm extends StatelessWidget {
               fontWeight: FontWeight.w900,
             ),
           ),
+          const SizedBox(height: 12),
+          const _GuestPriorityNotice(),
           const SizedBox(height: 12),
           TextFormField(
             key: const Key('guest-name-field'),
@@ -461,26 +655,133 @@ class _GuestCheckoutForm extends StatelessWidget {
   }
 }
 
+class _GuestPriorityNotice extends StatelessWidget {
+  const _GuestPriorityNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: KenkoColors.harvest.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: KenkoColors.harvest.withValues(alpha: 0.42)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(
+              Icons.info_outline_rounded,
+              color: KenkoColors.soil,
+              size: 20,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Guest orders need phone verification before packing and may be processed after signed-in customer orders.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: KenkoColors.rawBlack.withValues(alpha: 0.78),
+                  fontWeight: FontWeight.w700,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _OrderConfirmation extends StatelessWidget {
-  const _OrderConfirmation({required this.result});
+  const _OrderConfirmation({
+    required this.result,
+    required this.onCreateAccount,
+    required this.onContinueShopping,
+  });
 
   final OrderResult result;
+  final VoidCallback onCreateAccount;
+  final VoidCallback onContinueShopping;
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Center(
+          child: Container(
+            width: 58,
+            height: 58,
+            decoration: const BoxDecoration(
+              color: KenkoColors.moss,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.check_rounded,
+              color: KenkoColors.cream,
+              size: 34,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
         Text(
-          'Order ${result.orderCode} confirmed',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          'Order received',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             color: KenkoColors.rawBlack,
             fontWeight: FontWeight.w900,
           ),
         ),
-        const SizedBox(height: 8),
-        _MutedText(
-          'Status: ${result.status}\nTotal: ${result.total.toStringAsFixed(0)} VND',
+        const SizedBox(height: 10),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFAF0),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: KenkoColors.rawBlack.withValues(alpha: 0.12),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              children: [
+                Text(
+                  'Order ${result.orderCode} confirmed',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: KenkoColors.rawBlack,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _MutedText(
+                  'Status: ${result.status}\nTotal: ${result.total.toStringAsFixed(0)} VND',
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        const _GuestPriorityNotice(),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: onCreateAccount,
+          icon: const Icon(Icons.person_add_alt_1_rounded),
+          label: const Text('Create account to track'),
+        ),
+        const SizedBox(height: 10),
+        OutlinedButton(
+          key: const Key('continue-shopping'),
+          onPressed: onContinueShopping,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: KenkoColors.rawBlack,
+            side: BorderSide(
+              color: KenkoColors.rawBlack.withValues(alpha: 0.28),
+            ),
+          ),
+          child: const Text('Continue shopping'),
         ),
       ],
     );
