@@ -133,4 +133,14 @@ void main() {
 
     expect(products, sampleProducts);
   });
+
+  test('remote repository falls back to sample products when loading fails', () async {
+    final repository = ProductRepository.remoteLoaderForTesting(() async {
+      throw StateError('Unauthorized');
+    });
+
+    final products = await repository.fetchProducts();
+
+    expect(products, sampleProducts);
+  });
 }

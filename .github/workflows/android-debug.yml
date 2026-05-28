@@ -57,6 +57,15 @@ jobs:
             exit 1
           fi
 
+      - name: Verify Supabase guest product access
+        env:
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          curl --silent --show-error --fail \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/products?select=slug&limit=1"
+
       - name: Build debug APK
         env:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}

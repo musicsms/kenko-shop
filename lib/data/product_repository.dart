@@ -11,30 +11,51 @@ const _productSelect =
     'product_bundles!product_bundles_product_fk('
     'related_product:products!product_bundles_related_product_fk(slug))';
 
+typedef RemoteProductLoader = Future<List<Product>> Function();
+
 class ProductRepository {
   ProductRepository.remote(SupabaseClient client)
     : _client = client,
-      _isOffline = false;
+      _isOffline = false,
+      _remoteProductLoader = null;
 
-  ProductRepository.offline() : _client = null, _isOffline = true;
+  ProductRepository.remoteLoaderForTesting(RemoteProductLoader loader)
+    : _client = null,
+      _isOffline = false,
+      _remoteProductLoader = loader;
+
+  ProductRepository.offline()
+    : _client = null,
+      _isOffline = true,
+      _remoteProductLoader = null;
 
   final SupabaseClient? _client;
   final bool _isOffline;
+  final RemoteProductLoader? _remoteProductLoader;
 
   Future<List<Product>> fetchProducts() async {
     if (_isOffline) {
       return sampleProducts;
     }
 
-    final rows = await _client!
-        .from('products')
-        .select(_productSelect)
-        .eq('is_active', true)
-        .order('created_at');
+    try {
+      final remoteProductLoader = _remoteProductLoader;
+      if (remoteProductLoader != null) {
+        return await remoteProductLoader();
+      }
 
-    return rows
-        .map((row) => productFromSupabaseRow(Map<String, dynamic>.from(row)))
-        .toList(growable: false);
+      final rows = await _client!
+          .from('products')
+          .select(_productSelect)
+          .eq('is_active', true)
+          .order('created_at');
+
+      return rows
+          .map((row) => productFromSupabaseRow(Map<String, dynamic>.from(row)))
+          .toList(growable: false);
+    } catch (_) {
+      return sampleProducts;
+    }
   }
 }
 
