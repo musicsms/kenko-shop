@@ -8,7 +8,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 const _productSelect =
     '*, product_nutrition_tags(label,value,sort_order), '
-    'product_bundles(related_product:products!product_bundles_related_product_fk(slug))';
+    'product_bundles!product_bundles_product_fk('
+    'related_product:products!product_bundles_related_product_fk(slug))';
 
 class ProductRepository {
   ProductRepository.remote(SupabaseClient client)
