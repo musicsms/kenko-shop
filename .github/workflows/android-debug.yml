@@ -1,20 +1,25 @@
-name: Android Debug APK
+name: Android Debug Release
 
 on:
   push:
-    branches:
-      - main
-      - master
-      - kenko-fresh-impl
-  pull_request:
+    tags:
+      - "v*"
   workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag, for example v0.1.0-debug"
+        required: true
+        type: string
+
+permissions:
+  contents: write
 
 env:
   SUPABASE_URL: https://redanon.xerus-hamal.ts.net
 
 jobs:
-  build:
-    name: Build Android debug APK
+  release:
+    name: Build and publish Android debug APK
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -60,10 +65,17 @@ jobs:
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
 
-      - name: Upload debug APK
-        uses: actions/upload-artifact@v4
+      - name: Rename APK
+        run: |
+          mkdir -p release
+          cp build/app/outputs/flutter-apk/app-debug.apk release/kenko-shop-debug.apk
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
         with:
-          name: kenko-shop-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
-          if-no-files-found: error
-          retention-days: 14
+          tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
+          name: Kenko Shop ${{ github.event.inputs.tag_name || github.ref_name }}
+          body: |
+            Debug APK built with:
+            - SUPABASE_URL=${{ env.SUPABASE_URL }}
+          files: release/kenko-shop-debug.apk
