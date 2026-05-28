@@ -70,18 +70,26 @@ void main() {
     expect(find.text('KENKO FRESH'), findsOneWidget);
   });
 
-  testWidgets('adds a feed product to the floating cart', (tester) async {
+  testWidgets('adds a feed product and updates the cart tab badge', (
+    tester,
+  ) async {
     final product = sampleProducts.first;
 
     await pumpFreshFeed(tester, cartStore: CartStore());
 
     expect(find.text(product.name), findsOneWidget);
     expect(find.text(product.origin.name), findsOneWidget);
-    expect(find.text('0'), findsOneWidget);
+    expect(find.byKey(const Key('compact-bottom-nav')), findsOneWidget);
+    expect(find.text('Feed'), findsOneWidget);
+    expect(find.text('Browse'), findsOneWidget);
+    expect(find.text('Cart'), findsOneWidget);
+    expect(find.text('You'), findsOneWidget);
+    expect(find.byKey(const Key('compact-cart-badge')), findsNothing);
 
     await tester.tap(find.byKey(const Key('add-to-cart-bok-choy')));
     await tester.pump();
 
+    expect(find.byKey(const Key('compact-cart-badge')), findsOneWidget);
     expect(find.text('1'), findsOneWidget);
   });
 
@@ -105,7 +113,7 @@ void main() {
     await tester.tap(find.byKey(const Key('add-to-cart-bok-choy')));
     await tester.pump();
 
-    await tester.tap(find.byKey(const Key('floating-cart-pill')));
+    await tester.tap(find.byKey(const Key('compact-nav-cart')));
     await tester.pumpAndSettle();
 
     expect(find.text('Your fresh cart'), findsOneWidget);
@@ -219,7 +227,7 @@ void main() {
 
     await tester.tap(find.byKey(Key('add-to-cart-${product.id}')));
     await tester.pump();
-    await tester.tap(find.byKey(const Key('floating-cart-pill')));
+    await tester.tap(find.byKey(const Key('compact-nav-cart')));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
 
@@ -255,7 +263,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('add-to-cart-bok-choy')));
     await tester.pump();
-    await tester.tap(find.byKey(const Key('floating-cart-pill')));
+    await tester.tap(find.byKey(const Key('compact-nav-cart')));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Checkout'));
@@ -266,6 +274,40 @@ void main() {
     expect(find.text('Name is required'), findsOneWidget);
     expect(find.text('Phone is required'), findsOneWidget);
     expect(find.text('Address is required'), findsOneWidget);
+  });
+
+  testWidgets('guest checkout fields use dark text on the light sheet', (
+    tester,
+  ) async {
+    final cartStore = CartStore();
+
+    await pumpFreshFeed(
+      tester,
+      cartStore: cartStore,
+      guestCheckoutSubmitter: (_) async => const OrderResult(
+        orderId: 'order-test',
+        orderCode: 'KF-TEST',
+        total: 0,
+        status: 'new',
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('add-to-cart-bok-choy')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('compact-nav-cart')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Checkout'));
+    await tester.pumpAndSettle();
+
+    final nameField = tester.widget<TextField>(
+      find.descendant(
+        of: find.byKey(const Key('guest-name-field')),
+        matching: find.byType(TextField),
+      ),
+    );
+
+    expect(nameField.style?.color, const Color(0xFF101510));
+    expect(nameField.cursorColor, const Color(0xFF2E6B45));
   });
 
   testWidgets('successful remote guest checkout confirms order', (
@@ -291,7 +333,7 @@ void main() {
 
     await tester.tap(find.byKey(Key('add-to-cart-${product.id}')));
     await tester.pump();
-    await tester.tap(find.byKey(const Key('floating-cart-pill')));
+    await tester.tap(find.byKey(const Key('compact-nav-cart')));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Checkout'));

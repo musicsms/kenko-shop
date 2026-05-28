@@ -347,7 +347,9 @@ class _GuestCheckoutForm extends StatelessWidget {
             key: const Key('guest-name-field'),
             controller: nameController,
             enabled: !isSubmitting,
-            decoration: const InputDecoration(labelText: 'Name'),
+            style: _inputTextStyle,
+            cursorColor: KenkoColors.moss,
+            decoration: _inputDecoration('Name'),
             validator: (value) => value == null || value.trim().isEmpty
                 ? 'Name is required'
                 : null,
@@ -358,7 +360,9 @@ class _GuestCheckoutForm extends StatelessWidget {
             controller: phoneController,
             enabled: !isSubmitting,
             keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(labelText: 'Phone'),
+            style: _inputTextStyle,
+            cursorColor: KenkoColors.moss,
+            decoration: _inputDecoration('Phone'),
             validator: (value) => value == null || value.trim().isEmpty
                 ? 'Phone is required'
                 : null,
@@ -368,7 +372,9 @@ class _GuestCheckoutForm extends StatelessWidget {
             key: const Key('guest-address-field'),
             controller: addressController,
             enabled: !isSubmitting,
-            decoration: const InputDecoration(labelText: 'Address'),
+            style: _inputTextStyle,
+            cursorColor: KenkoColors.moss,
+            decoration: _inputDecoration('Address'),
             validator: (value) => value == null || value.trim().isEmpty
                 ? 'Address is required'
                 : null,
@@ -378,7 +384,9 @@ class _GuestCheckoutForm extends StatelessWidget {
             key: const Key('guest-note-field'),
             controller: noteController,
             enabled: !isSubmitting,
-            decoration: const InputDecoration(labelText: 'Note'),
+            style: _inputTextStyle,
+            cursorColor: KenkoColors.moss,
+            decoration: _inputDecoration('Note'),
             minLines: 1,
             maxLines: 3,
           ),
@@ -404,6 +412,50 @@ class _GuestCheckoutForm extends StatelessWidget {
                 : const Text('Submit order'),
           ),
         ],
+      ),
+    );
+  }
+
+  static const _inputTextStyle = TextStyle(
+    color: KenkoColors.rawBlack,
+    fontWeight: FontWeight.w800,
+  );
+
+  InputDecoration _inputDecoration(String label) {
+    const radius = BorderRadius.all(Radius.circular(16));
+    final idleBorder = OutlineInputBorder(
+      borderRadius: radius,
+      borderSide: BorderSide(
+        color: KenkoColors.rawBlack.withValues(alpha: 0.14),
+        width: 1.4,
+      ),
+    );
+
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(
+        color: KenkoColors.rawBlack.withValues(alpha: 0.62),
+        fontWeight: FontWeight.w800,
+      ),
+      floatingLabelStyle: const TextStyle(
+        color: KenkoColors.moss,
+        fontWeight: FontWeight.w900,
+      ),
+      filled: true,
+      fillColor: const Color(0xFFFFFAF0),
+      enabledBorder: idleBorder,
+      disabledBorder: idleBorder,
+      focusedBorder: const OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: KenkoColors.moss, width: 1.8),
+      ),
+      errorBorder: const OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: KenkoColors.flash, width: 1.6),
+      ),
+      focusedErrorBorder: const OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: KenkoColors.flash, width: 1.8),
       ),
     );
   }

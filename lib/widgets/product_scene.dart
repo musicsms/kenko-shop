@@ -113,7 +113,7 @@ class ProductScene extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 108),
+                      const SizedBox(height: 86),
                     ],
                   ),
                 );
@@ -122,8 +122,8 @@ class ProductScene extends StatelessWidget {
           ),
           Positioned(
             right: 24,
-            bottom: 104,
-            child: FloatingActionButton(
+            bottom: 92,
+            child: FloatingActionButton.small(
               key: Key('add-to-cart-${product.id}'),
               heroTag: 'add-to-cart-${product.id}',
               backgroundColor: KenkoColors.cream,
