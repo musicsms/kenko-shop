@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kenko_shop/config/app_config.dart';
@@ -27,6 +29,18 @@ void main() {
   });
 
   group('productFromSupabaseRow', () {
+    test('uses explicit PostgREST relationship hints for product bundles', () {
+      final source = File('lib/data/product_repository.dart').readAsStringSync();
+
+      expect(source, contains('product_bundles!product_bundles_product_fk('));
+      expect(
+        source,
+        contains(
+          'related_product:products!product_bundles_related_product_fk(slug)',
+        ),
+      );
+    });
+
     test(
       'maps nested nutrition tags and product bundles to product fields',
       () {
