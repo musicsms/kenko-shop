@@ -51,6 +51,7 @@ jobs:
         run: flutter test
 
       - name: Check Supabase anon key
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         env:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
@@ -60,6 +61,7 @@ jobs:
           fi
 
       - name: Verify Supabase guest product access
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         env:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
@@ -79,6 +81,7 @@ jobs:
           exit "$status"
 
       - name: Build debug APK
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         env:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
@@ -87,6 +90,7 @@ jobs:
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
 
       - name: Rename APK
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         run: |
           mkdir -p release
           cp build/app/outputs/flutter-apk/app-debug.apk release/kenko-shop-debug.apk
