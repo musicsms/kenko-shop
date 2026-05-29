@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:kenko_shop/app/theme.dart';
 import 'package:kenko_shop/config/app_config.dart';
+import 'package:kenko_shop/data/auth_repository.dart';
 import 'package:kenko_shop/data/order_repository.dart';
 import 'package:kenko_shop/data/product_repository.dart';
 import 'package:kenko_shop/screens/fresh_feed_screen.dart';
+import 'package:kenko_shop/state/auth_store.dart';
 import 'package:kenko_shop/state/cart_store.dart';
 import 'package:kenko_shop/state/product_feed_store.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -22,6 +24,8 @@ class _KenkoAppState extends State<KenkoApp> {
   late final OrderRepository? _orderRepository;
   late final ProductRepository _productRepository;
   late final ProductFeedStore _productFeedStore;
+  late final AuthStore _authStore;
+  late final AuthRepository _authRepository;
 
   @override
   void initState() {
@@ -34,12 +38,15 @@ class _KenkoAppState extends State<KenkoApp> {
         ? OrderRepository(Supabase.instance.client)
         : null;
     _productFeedStore = ProductFeedStore(_productRepository.fetchProducts);
+    _authStore = AuthStore(Supabase.instance.client);
+    _authRepository = AuthRepository(Supabase.instance.client);
   }
 
   @override
   void dispose() {
     _productFeedStore.dispose();
     _cartStore.dispose();
+    _authStore.dispose();
     super.dispose();
   }
 
@@ -53,6 +60,8 @@ class _KenkoAppState extends State<KenkoApp> {
         productFeedStore: _productFeedStore,
         cartStore: _cartStore,
         guestCheckoutSubmitter: _orderRepository?.createGuestOrder,
+        authStore: _authStore,
+        authRepository: _authRepository,
       ),
     );
   }
