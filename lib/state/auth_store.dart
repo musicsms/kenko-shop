@@ -9,7 +9,8 @@ abstract class AuthStoreBase extends ChangeNotifier {
 }
 
 class AuthStore extends AuthStoreBase {
-  AuthStore(GoTrueClient auth) {
+  AuthStore(SupabaseClient client) {
+    final auth = client.auth;
     _isSignedIn = auth.currentUser != null;
     _userEmail = auth.currentUser?.email;
     _subscription = auth.onAuthStateChange.listen((state) {

@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthRepository {
-  const AuthRepository(this._auth);
+  AuthRepository(SupabaseClient client) : _auth = client.auth;
 
   final GoTrueClient _auth;
 
