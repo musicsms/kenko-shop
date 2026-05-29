@@ -24,8 +24,8 @@ class _KenkoAppState extends State<KenkoApp> {
   late final OrderRepository? _orderRepository;
   late final ProductRepository _productRepository;
   late final ProductFeedStore _productFeedStore;
-  late final AuthStore _authStore;
-  late final AuthRepository _authRepository;
+  late final AuthStore? _authStore;
+  late final AuthRepository? _authRepository;
 
   @override
   void initState() {
@@ -38,15 +38,19 @@ class _KenkoAppState extends State<KenkoApp> {
         ? OrderRepository(Supabase.instance.client)
         : null;
     _productFeedStore = ProductFeedStore(_productRepository.fetchProducts);
-    _authStore = AuthStore(Supabase.instance.client);
-    _authRepository = AuthRepository(Supabase.instance.client);
+    _authStore = widget.config.hasSupabaseConfig
+        ? AuthStore(Supabase.instance.client)
+        : null;
+    _authRepository = widget.config.hasSupabaseConfig
+        ? AuthRepository(Supabase.instance.client)
+        : null;
   }
 
   @override
   void dispose() {
     _productFeedStore.dispose();
     _cartStore.dispose();
-    _authStore.dispose();
+    _authStore?.dispose();
     super.dispose();
   }
 
