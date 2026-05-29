@@ -2,9 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:kenko_shop/app/theme.dart';
+import 'package:kenko_shop/data/auth_repository.dart';
 import 'package:kenko_shop/models/product.dart';
+import 'package:kenko_shop/screens/browse_screen.dart';
+import 'package:kenko_shop/screens/you_screen.dart';
+import 'package:kenko_shop/state/auth_store.dart';
 import 'package:kenko_shop/state/cart_store.dart';
 import 'package:kenko_shop/state/product_feed_store.dart';
+import 'package:kenko_shop/widgets/auth_sheet.dart';
 import 'package:kenko_shop/widgets/cart_sheet.dart';
 import 'package:kenko_shop/widgets/compact_bottom_nav.dart';
 import 'package:kenko_shop/widgets/product_detail_sheet.dart';
@@ -15,12 +20,16 @@ class FreshFeedScreen extends StatefulWidget {
     required this.productFeedStore,
     required this.cartStore,
     this.guestCheckoutSubmitter,
+    this.authStore,
+    this.authRepository,
     super.key,
   });
 
   final ProductFeedStore productFeedStore;
   final CartStore cartStore;
   final GuestCheckoutSubmitter? guestCheckoutSubmitter;
+  final AuthStoreBase? authStore;
+  final AuthRepository? authRepository;
 
   @override
   State<FreshFeedScreen> createState() => _FreshFeedScreenState();
@@ -114,20 +123,37 @@ class _FreshFeedScreenState extends State<FreshFeedScreen> {
   ) {
     return switch (_selectedTab) {
       0 => _buildFeed(productFeedStore, products),
-      1 => const _PlaceholderTab(
-        key: Key('browse-placeholder'),
-        icon: Icons.search_rounded,
-        title: 'Browse fresh picks',
-        message: 'Categories, filters, and farm collections will live here.',
-      ),
-      3 => const _PlaceholderTab(
+      1 => BrowseScreen(cartStore: widget.cartStore),
+      3 => _buildYouTab(),
+      _ => _buildFeed(productFeedStore, products),
+    };
+  }
+
+  Widget _buildYouTab() {
+    final authStore = widget.authStore;
+    final authRepository = widget.authRepository;
+    if (authStore == null || authRepository == null) {
+      return const _PlaceholderTab(
         key: Key('you-placeholder'),
         icon: Icons.person_rounded,
         title: 'Your Kenko',
         message: 'Saved addresses and optional sign-in can come later.',
-      ),
-      _ => _buildFeed(productFeedStore, products),
-    };
+      );
+    }
+    return YouScreen(
+      authStore: authStore,
+      onSignIn: () => _openAuthSheet(authRepository),
+      onSignOut: () => unawaited(authRepository.signOut()),
+    );
+  }
+
+  void _openAuthSheet(AuthRepository authRepository) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AuthSheet(authRepository: authRepository),
+    );
   }
 
   Widget _buildFeed(ProductFeedStore productFeedStore, List<Product> products) {
@@ -210,6 +236,7 @@ class _FreshFeedScreenState extends State<FreshFeedScreen> {
       builder: (context) => CartSheet(
         cartStore: widget.cartStore,
         guestCheckoutSubmitter: widget.guestCheckoutSubmitter,
+        authRepository: widget.authRepository,
       ),
     );
   }
