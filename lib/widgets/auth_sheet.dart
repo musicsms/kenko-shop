@@ -50,12 +50,12 @@ class _AuthSheetState extends State<AuthSheet> {
       if (_mode == _AuthMode.signIn) {
         await widget.authRepository.signInWithEmail(
           _emailController.text.trim(),
-          _passwordController.text.trim(),
+          _passwordController.text,
         );
       } else {
         await widget.authRepository.signUpWithEmail(
           _emailController.text.trim(),
-          _passwordController.text.trim(),
+          _passwordController.text,
         );
       }
       if (!mounted) return;

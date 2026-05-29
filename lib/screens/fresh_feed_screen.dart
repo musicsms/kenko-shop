@@ -123,7 +123,10 @@ class _FreshFeedScreenState extends State<FreshFeedScreen> {
   ) {
     return switch (_selectedTab) {
       0 => _buildFeed(productFeedStore, products),
-      1 => BrowseScreen(cartStore: widget.cartStore),
+      1 => BrowseScreen(
+          cartStore: widget.cartStore,
+          productFeedStore: widget.productFeedStore,
+        ),
       3 => _buildYouTab(),
       _ => _buildFeed(productFeedStore, products),
     };

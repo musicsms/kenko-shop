@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:kenko_shop/app/theme.dart';
-import 'package:kenko_shop/data/sample_products.dart';
 import 'package:kenko_shop/models/product.dart';
 import 'package:kenko_shop/state/cart_store.dart';
+import 'package:kenko_shop/state/product_feed_store.dart';
 import 'package:kenko_shop/widgets/product_detail_sheet.dart';
 
 class BrowseScreen extends StatefulWidget {
-  const BrowseScreen({required this.cartStore, super.key});
+  const BrowseScreen({
+    required this.cartStore,
+    required this.productFeedStore,
+    super.key,
+  });
 
   final CartStore cartStore;
+  final ProductFeedStore productFeedStore;
 
   @override
   State<BrowseScreen> createState() => _BrowseScreenState();
@@ -19,19 +24,15 @@ class _BrowseScreenState extends State<BrowseScreen> {
   String _query = '';
   String? _selectedCategory;
 
-  static final _allCategories = List<String>.unmodifiable(
-    sampleProducts.map((p) => p.category).toSet().toList()..sort(),
-  );
-
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
-  List<Product> get _filtered {
+  List<Product> _filtered(List<Product> products) {
     final q = _query.toLowerCase();
-    return sampleProducts.where((p) {
+    return products.where((p) {
       final matchCat =
           _selectedCategory == null || p.category == _selectedCategory;
       final matchQ = q.isEmpty ||
@@ -43,115 +44,131 @@ class _BrowseScreenState extends State<BrowseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [KenkoColors.rawBlack, Color(0xFF0D1F10), KenkoColors.rawBlack],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: TextField(
-                key: const Key('browse-search-field'),
-                controller: _searchController,
-                style: const TextStyle(
-                  color: KenkoColors.cream,
-                  fontWeight: FontWeight.w700,
-                ),
-                cursorColor: KenkoColors.harvest,
-                onChanged: (v) => setState(() => _query = v),
-                decoration: InputDecoration(
-                  hintText: 'Search products...',
-                  hintStyle: TextStyle(
-                    color: KenkoColors.cream.withValues(alpha: 0.42),
-                  ),
-                  prefixIcon: Icon(
-                    Icons.search_rounded,
-                    color: KenkoColors.cream.withValues(alpha: 0.6),
-                  ),
-                  filled: true,
-                  fillColor: KenkoColors.rawBlack.withValues(alpha: 0.6),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    borderSide: BorderSide(
-                      color: KenkoColors.cream.withValues(alpha: 0.18),
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(18),
-                    borderSide: const BorderSide(
-                      color: KenkoColors.harvest,
-                      width: 1.6,
-                    ),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                ),
+    return AnimatedBuilder(
+      animation: widget.productFeedStore,
+      builder: (context, _) {
+        final products = widget.productFeedStore.products;
+        final allCategories = List<String>.unmodifiable(
+          products.map((p) => p.category).toSet().toList()..sort(),
+        );
+        final filtered = _filtered(products);
+        return Material(
+          color: Colors.transparent,
+          child: DecoratedBox(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [KenkoColors.rawBlack, Color(0xFF0D1F10), KenkoColors.rawBlack],
               ),
             ),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 40,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SafeArea(
+              child: Column(
                 children: [
-                  _CategoryChip(
-                    chipKey: const Key('browse-chip-All'),
-                    label: 'All',
-                    isSelected: _selectedCategory == null,
-                    onTap: () => setState(() => _selectedCategory = null),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: TextField(
+                      key: const Key('browse-search-field'),
+                      controller: _searchController,
+                      style: const TextStyle(
+                        color: KenkoColors.cream,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      cursorColor: KenkoColors.harvest,
+                      onChanged: (v) => setState(() => _query = v),
+                      decoration: InputDecoration(
+                        hintText: 'Search products...',
+                        hintStyle: TextStyle(
+                          color: KenkoColors.cream.withValues(alpha: 0.42),
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          color: KenkoColors.cream.withValues(alpha: 0.6),
+                        ),
+                        filled: true,
+                        fillColor: KenkoColors.rawBlack.withValues(alpha: 0.6),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide(
+                            color: KenkoColors.cream.withValues(alpha: 0.18),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: const BorderSide(
+                            color: KenkoColors.harvest,
+                            width: 1.6,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
                   ),
-                  ..._allCategories.map(
-                    (cat) => _CategoryChip(
-                      chipKey: Key('browse-chip-$cat'),
-                      label: cat,
-                      isSelected: _selectedCategory == cat,
-                      onTap: () => setState(() => _selectedCategory = cat),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 40,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      children: [
+                        _CategoryChip(
+                          chipKey: const Key('browse-chip-All'),
+                          label: 'All',
+                          isSelected: _selectedCategory == null,
+                          onTap: () => setState(() => _selectedCategory = null),
+                        ),
+                        ...allCategories.map(
+                          (cat) => _CategoryChip(
+                            chipKey: Key('browse-chip-$cat'),
+                            label: cat,
+                            isSelected: _selectedCategory == cat,
+                            onTap: () =>
+                                setState(() => _selectedCategory = cat),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final cardWidth =
+                            (constraints.maxWidth - 16 * 2 - 12) / 2;
+                        final cardHeight = cardWidth / 0.82;
+                        return SingleChildScrollView(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
+                          child: Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: filtered
+                                .map(
+                                  (product) => SizedBox(
+                                    width: cardWidth,
+                                    height: cardHeight,
+                                    child: _ProductBrowseCard(
+                                      product: product,
+                                      onAdd: () =>
+                                          widget.cartStore.add(product),
+                                      onTap: () => _openDetail(product),
+                                    ),
+                                  ),
+                                )
+                                .toList(growable: false),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final cardWidth =
-                      (constraints.maxWidth - 16 * 2 - 12) / 2;
-                  final cardHeight = cardWidth / 0.82;
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
-                    child: Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: _filtered.map((product) => SizedBox(
-                        width: cardWidth,
-                        height: cardHeight,
-                        child: _ProductBrowseCard(
-                          product: product,
-                          onAdd: () => widget.cartStore.add(product),
-                          onTap: () => _openDetail(product),
-                        ),
-                      )).toList(growable: false),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

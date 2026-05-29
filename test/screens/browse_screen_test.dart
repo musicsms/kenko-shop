@@ -3,19 +3,37 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kenko_shop/data/sample_products.dart';
 import 'package:kenko_shop/screens/browse_screen.dart';
 import 'package:kenko_shop/state/cart_store.dart';
+import 'package:kenko_shop/state/product_feed_store.dart';
 
-Future<void> pumpBrowseScreen(WidgetTester tester, CartStore cartStore) async {
+Future<void> pumpBrowseScreen(
+  WidgetTester tester,
+  CartStore cartStore,
+  ProductFeedStore productFeedStore,
+) async {
   await tester.pumpWidget(
-    MaterialApp(home: BrowseScreen(cartStore: cartStore)),
+    MaterialApp(
+      home: BrowseScreen(
+        cartStore: cartStore,
+        productFeedStore: productFeedStore,
+      ),
+    ),
   );
   await tester.pump();
+}
+
+ProductFeedStore _loadedStore() {
+  final store = ProductFeedStore(() async => List.from(sampleProducts));
+  return store;
 }
 
 void main() {
   testWidgets('shows all products when no filter is active', (tester) async {
     final cartStore = CartStore();
     addTearDown(cartStore.dispose);
-    await pumpBrowseScreen(tester, cartStore);
+    final productFeedStore = _loadedStore();
+    await productFeedStore.load();
+    addTearDown(productFeedStore.dispose);
+    await pumpBrowseScreen(tester, cartStore, productFeedStore);
 
     for (final product in sampleProducts) {
       expect(find.text(product.name), findsOneWidget);
@@ -27,7 +45,10 @@ void main() {
   ) async {
     final cartStore = CartStore();
     addTearDown(cartStore.dispose);
-    await pumpBrowseScreen(tester, cartStore);
+    final productFeedStore = _loadedStore();
+    await productFeedStore.load();
+    addTearDown(productFeedStore.dispose);
+    await pumpBrowseScreen(tester, cartStore, productFeedStore);
 
     await tester.tap(find.byKey(const Key('browse-chip-Greens')));
     await tester.pump();
@@ -42,7 +63,10 @@ void main() {
   ) async {
     final cartStore = CartStore();
     addTearDown(cartStore.dispose);
-    await pumpBrowseScreen(tester, cartStore);
+    final productFeedStore = _loadedStore();
+    await productFeedStore.load();
+    addTearDown(productFeedStore.dispose);
+    await pumpBrowseScreen(tester, cartStore, productFeedStore);
 
     await tester.tap(find.byKey(const Key('browse-chip-Greens')));
     await tester.pump();
@@ -56,7 +80,10 @@ void main() {
   testWidgets('search filters products by name', (tester) async {
     final cartStore = CartStore();
     addTearDown(cartStore.dispose);
-    await pumpBrowseScreen(tester, cartStore);
+    final productFeedStore = _loadedStore();
+    await productFeedStore.load();
+    addTearDown(productFeedStore.dispose);
+    await pumpBrowseScreen(tester, cartStore, productFeedStore);
 
     await tester.enterText(find.byKey(const Key('browse-search-field')), 'carrot');
     await tester.pump();
@@ -68,7 +95,10 @@ void main() {
   testWidgets('add button increments cart store', (tester) async {
     final cartStore = CartStore();
     addTearDown(cartStore.dispose);
-    await pumpBrowseScreen(tester, cartStore);
+    final productFeedStore = _loadedStore();
+    await productFeedStore.load();
+    addTearDown(productFeedStore.dispose);
+    await pumpBrowseScreen(tester, cartStore, productFeedStore);
 
     expect(cartStore.totalQuantity, 0);
     await tester.tap(find.byKey(Key('browse-add-${sampleProducts.first.id}')));
