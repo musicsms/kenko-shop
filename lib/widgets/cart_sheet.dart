@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:kenko_shop/app/theme.dart';
+import 'package:kenko_shop/data/auth_repository.dart';
 import 'package:kenko_shop/models/guest_order.dart';
 import 'package:kenko_shop/models/order_result.dart';
 import 'package:kenko_shop/state/cart_store.dart';
+import 'package:kenko_shop/widgets/auth_sheet.dart';
 
 typedef GuestCheckoutSubmitter =
     Future<OrderResult> Function(GuestOrderRequest request);
@@ -13,11 +15,13 @@ class CartSheet extends StatefulWidget {
   const CartSheet({
     required this.cartStore,
     this.guestCheckoutSubmitter,
+    this.authRepository,
     super.key,
   });
 
   final CartStore cartStore;
   final GuestCheckoutSubmitter? guestCheckoutSubmitter;
+  final AuthRepository? authRepository;
 
   @override
   State<CartSheet> createState() => _CartSheetState();
@@ -82,7 +86,7 @@ class _CartSheetState extends State<CartSheet> {
                   if (_orderResult != null)
                     _OrderConfirmation(
                       result: _orderResult!,
-                      onCreateAccount: _showAccountComingSoon,
+                      onCreateAccount: () => _openAuthSheet(startInSignUpMode: true),
                       onContinueShopping: () => Navigator.of(context).pop(),
                     )
                   else if (widget.cartStore.checkoutComplete)
@@ -104,7 +108,8 @@ class _CartSheetState extends State<CartSheet> {
                           _step = _CartSheetStep.guestForm;
                         });
                       },
-                      onAuthSelected: _showAccountComingSoon,
+                      onEmailAuth: () => _openAuthSheet(),
+                      onOtherAuth: _showAuthComingSoon,
                     )
                   else ...[
                     if (_step == _CartSheetStep.guestForm &&
@@ -281,11 +286,26 @@ class _CartSheetState extends State<CartSheet> {
     }
   }
 
-  void _showAccountComingSoon() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Account sign-in and order tracking are coming next.'),
+  void _openAuthSheet({bool startInSignUpMode = false}) {
+    final repo = widget.authRepository;
+    if (repo == null) {
+      _showAuthComingSoon();
+      return;
+    }
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AuthSheet(
+        authRepository: repo,
+        startInSignUpMode: startInSignUpMode,
       ),
+    );
+  }
+
+  void _showAuthComingSoon() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Account sign-in coming soon.')),
     );
   }
 }
@@ -293,11 +313,13 @@ class _CartSheetState extends State<CartSheet> {
 class _AccountPrompt extends StatelessWidget {
   const _AccountPrompt({
     required this.onContinueAsGuest,
-    required this.onAuthSelected,
+    required this.onEmailAuth,
+    required this.onOtherAuth,
   });
 
   final VoidCallback onContinueAsGuest;
-  final VoidCallback onAuthSelected;
+  final VoidCallback onEmailAuth;
+  final VoidCallback onOtherAuth;
 
   @override
   Widget build(BuildContext context) {
@@ -358,13 +380,13 @@ class _AccountPrompt extends StatelessWidget {
         _AuthButton(
           icon: Icons.phone_iphone_rounded,
           label: 'Continue with phone',
-          onTap: onAuthSelected,
+          onTap: onOtherAuth,
         ),
         const SizedBox(height: 8),
         _AuthButton(
           icon: Icons.alternate_email_rounded,
           label: 'Continue with email',
-          onTap: onAuthSelected,
+          onTap: onEmailAuth,
         ),
         const SizedBox(height: 10),
         OutlinedButton(
@@ -382,20 +404,20 @@ class _AccountPrompt extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _SocialAuthButton(label: 'Google', onTap: onAuthSelected),
+              child: _SocialAuthButton(label: 'Google', onTap: onOtherAuth),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: _SocialAuthButton(
                 label: 'Facebook',
-                onTap: onAuthSelected,
+                onTap: onOtherAuth,
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: _SocialAuthButton(
                 label: 'Instagram',
-                onTap: onAuthSelected,
+                onTap: onOtherAuth,
               ),
             ),
           ],
